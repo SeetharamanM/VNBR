@@ -1,31 +1,11 @@
-"""Timeline by Estimate — RCC RW."""
+"""Timeline by Estimate."""
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 import plotly.express as px
 import plotly.graph_objects as go
+from shared_data import get_selected_data_file, load_data
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXCEL_PATH = PROJECT_ROOT / "RCC RW data.xlsx"
-
-
-@st.cache_data
-def load_data():
-    df = pd.read_excel(EXCEL_PATH, sheet_name="RCC RW", header=0)
-    df.columns = [
-        "Estimate", "Est_Length", "Bill_No", "Item", "Height",
-        "Stretch", "Length", "Mbook", "Pages", "Date"
-    ]
-    df = df[df["Estimate"] != "Estimate"].copy()
-    df = df.dropna(how="all")
-    df["Length"] = pd.to_numeric(df["Length"], errors="coerce")
-    df["Est_Length"] = pd.to_numeric(df["Est_Length"], errors="coerce")
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-    df["Mbook"] = df["Mbook"].astype(str).str.strip()
-    return df
-
-
-df = load_data()
+df = load_data(get_selected_data_file())
 valid = df.dropna(subset=["Length"]).copy()
 valid = valid[valid["Item"].notna() & (valid["Item"] != "Item")]
 
@@ -45,7 +25,7 @@ months_list = sorted(valid_dates["Month"].dropna().unique().tolist())
 mbooks_list = sorted(valid_dates["Mbook"].dropna().replace("", pd.NA).dropna().unique().tolist())
 stretches_list = sorted(valid_dates["Stretch"].dropna().astype(str).str.strip().replace("", pd.NA).dropna().unique().tolist(), key=lambda x: str(x))
 
-st.title("Vaigai North Bank Road Project")
+st.title("Timeline")
 st.caption("Timeline of each stretch by items (filtered by Bill No)")
 
 # Sidebar filters
@@ -86,7 +66,7 @@ filter_stretches = st.sidebar.multiselect(
     key="tl_filter_stretch",
 )
 st.sidebar.divider()
-st.sidebar.caption("Data: RCC RW data.xlsx")
+st.sidebar.caption(f"Data: {get_selected_data_file()}")
 
 # Apply filters
 timeline_df = valid_dates.copy()

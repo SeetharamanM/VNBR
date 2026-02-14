@@ -1,45 +1,16 @@
-"""Mbook & Pages — RCC RW analysis."""
+"""Mbook & Pages analysis."""
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 import plotly.express as px
+from shared_data import get_selected_data_file, load_data
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXCEL_PATH = PROJECT_ROOT / "RCC RW data.xlsx"
-CSV_PATH = PROJECT_ROOT / "RCC RW data.csv"
-
-
-@st.cache_data
-def load_data():
-    if EXCEL_PATH.exists():
-        df = pd.read_excel(EXCEL_PATH, sheet_name="RCC RW", header=0)
-        df.columns = [
-            "Estimate", "Est_Length", "Bill_No", "Item", "Height",
-            "Stretch", "Length", "Mbook", "Pages", "Date",
-        ]
-    else:
-        df = pd.read_csv(CSV_PATH)
-        df.columns = [
-            "Estimate", "Est_Length", "Bill_No", "Item", "Height",
-            "Stretch", "Length", "Mbook", "Pages", "Date",
-        ]
-    df = df[df["Estimate"].astype(str).str.strip() != "Estimate"].copy()
-    df = df.dropna(how="all")
-    df["Length"] = pd.to_numeric(df["Length"], errors="coerce")
-    df["Est_Length"] = pd.to_numeric(df["Est_Length"], errors="coerce")
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-    df["Mbook"] = df["Mbook"].astype(str).str.strip()
-    return df
-
-
-df = load_data()
+df = load_data(get_selected_data_file())
 df = df[df["Item"].notna() & (df["Item"].astype(str).str.strip() != "Item")].copy()
 
-st.title("Mbook & Pages — RCC RW")
+st.title("Mbook & Pages")
 st.caption("Analyse Mbook pages and date for each item. Filter by estimate and bill no.")
 
-# Sidebar: filter by estimate
-st.sidebar.header("Filters")
+# Sidebar: filters
 estimates = ["All"] + sorted(df["Estimate"].dropna().astype(str).unique().tolist())
 selected_estimate = st.sidebar.selectbox(
     "Estimate",
@@ -78,7 +49,7 @@ else:
     st.sidebar.caption(f"Showing all **{len(filtered)}** rows.")
 
 st.sidebar.divider()
-st.sidebar.caption("Data: RCC RW data.xlsx / RCC RW data.csv")
+st.sidebar.caption(f"Data: {get_selected_data_file()}")
 
 if filtered.empty:
     st.warning("No data for the selected filters.")

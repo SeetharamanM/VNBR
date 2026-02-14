@@ -1,13 +1,9 @@
-"""Overlap & Gap Analysis — RCC RW, stretch-wise."""
+"""Overlap & Gap Analysis — stretch-wise."""
 import re
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 import plotly.graph_objects as go
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXCEL_PATH = PROJECT_ROOT / "RCC RW data.xlsx"
-CSV_PATH = PROJECT_ROOT / "RCC RW data.csv"
+from shared_data import get_selected_data_file, load_data
 
 TOTAL_LENGTH_M = 8150
 EXCLUDED_ESTIMATE_OVERLAP = "RCC RW (0-280) (mid)"
@@ -104,22 +100,6 @@ def coverage_to_ranges(chainage_index, coverage, resolution, min_count=0, max_co
 
 def stretch_label(row):
     return f"{row.get('Estimate', '')} | {row.get('Stretch', '')}"
-
-
-@st.cache_data
-def load_data():
-    if EXCEL_PATH.exists():
-        df = pd.read_excel(EXCEL_PATH, sheet_name="RCC RW", header=0)
-    else:
-        df = pd.read_csv(CSV_PATH)
-    df.columns = [
-        "Estimate", "Est_Length", "Bill_No", "Item", "Height",
-        "Stretch", "Length", "Mbook", "Pages", "Date",
-    ]
-    df = df[df["Estimate"].astype(str).str.strip() != "Estimate"].copy()
-    df = df.dropna(how="all")
-    df["Stretch"] = df["Stretch"].astype(str).str.strip()
-    return df
 
 
 @st.cache_data
@@ -312,7 +292,7 @@ def build_gap_over_chainage_chart(gap_ranges, no_wall_ranges, max_chainage, x_mi
 st.title("Overlap & Gap Analysis — RCC RW")
 st.caption(f"Max length **{TOTAL_LENGTH_M} m**. Stretch-wise; no wall excluded from gap/single/overlap calculation. **Excluded:** {EXCLUDED_ESTIMATE_OVERLAP} (different location).")
 
-df_raw = load_data()
+df_raw = load_data(get_selected_data_file())
 st.sidebar.caption(f"**Excluded from overlap:** {EXCLUDED_ESTIMATE_OVERLAP} (different location).")
 chunk_size = st.sidebar.number_input("Chunk size (m)", min_value=500, max_value=2000, value=1000, step=100, key="og_chunk")
 resolution = st.sidebar.selectbox("Resolution (m)", [1, 5, 10], index=0, key="og_res")

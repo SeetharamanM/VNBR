@@ -1,13 +1,11 @@
-"""RCC Retaining Wall Progress — Month-wise overall length."""
+"""Progress — Month-wise overall length."""
 import re
 import streamlit as st
 import pandas as pd
-from pathlib import Path
 import plotly.graph_objects as go
 import plotly.express as px
+from shared_data import get_selected_data_file, load_data
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXCEL_PATH = PROJECT_ROOT / "RCC RW data.xlsx"
 TARGET_MONTH = "2026-03"  # March 2026
 
 
@@ -62,22 +60,7 @@ def length_in_no_wall(start, end, no_wall_ranges):
     return total
 
 
-@st.cache_data
-def load_data():
-    df = pd.read_excel(EXCEL_PATH, sheet_name="RCC RW", header=0)
-    df.columns = [
-        "Estimate", "Est_Length", "Bill_No", "Item", "Height",
-        "Stretch", "Length", "Mbook", "Pages", "Date"
-    ]
-    df = df[df["Estimate"] != "Estimate"].copy()
-    df = df.dropna(how="all")
-    df["Length"] = pd.to_numeric(df["Length"], errors="coerce")
-    df["Est_Length"] = pd.to_numeric(df["Est_Length"], errors="coerce")
-    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-    return df
-
-
-df = load_data()
+df = load_data(get_selected_data_file())
 valid = df.dropna(subset=["Length"]).copy()
 valid = valid[valid["Item"].notna() & (valid["Item"] != "Item")]
 
@@ -113,7 +96,7 @@ monthly = (
     .sort_values("Month")
 )
 
-st.title("Vaigai North Bank Road Project")
+st.title("Progress")
 st.caption("RCC Retaining Wall — Overall length progress (month-wise). **No-wall portions deducted** from total and completed.")
 
 if len(monthly) == 0:
