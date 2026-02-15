@@ -1,10 +1,10 @@
 """
-Vaigai North Bank Road Project — Home
+Vaigai North Bank Road Project — RCC Retaining wall Data Dashboard 
 """
 import streamlit as st
 from shared_data import get_available_files, get_selected_data_file
 
-st.title("Vaigai North Bank Road Project")
+st.title("Vaigai North Bank Road Project - RCC Retaining wall/ PCC Retaining wall/ Box Culvert Data Dashboard")
 st.markdown("**Analytics Dashboard**")
 
 st.divider()
